@@ -12,94 +12,98 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     protected abstract static class Operator {
-        abstract public void calc(MainActivity activity);
+        abstract public double calc(double numLeft, double numRight);
     }
     protected static class Operator_plus extends Operator {
         @Override
-        public void calc(MainActivity activity) {
-            activity.updateNumAccum(activity.getNumAccum() + activity.getNumEntered());
+        public double calc(double numLeft, double numRight) {
+            return numLeft + numRight;
         }
     }
     protected static class Operator_minus extends Operator {
         @Override
-        public void calc(MainActivity activity) {
-            activity.updateNumAccum(activity.getNumAccum() - activity.getNumEntered());
+        public double calc(double numLeft, double numRight) {
+            return numLeft - numRight;
         }
     }
     protected static class Operator_multiply extends Operator {
         @Override
-        public void calc(MainActivity activity) {
-            activity.updateNumAccum(activity.getNumAccum() * activity.getNumEntered());
+        public double calc(double numLeft, double numRight) {
+            return numLeft * numRight;
         }
     }
     protected static class Operator_divide extends Operator {
         @Override
-        public void calc(MainActivity activity) {
-            activity.updateNumAccum(activity.getNumAccum() / activity.getNumEntered());
+        public double calc(double numLeft, double numRight) {
+            return numLeft / numRight;
         }
     }
     //-------------------------------------------------------------------------
-    Double mNumAccum;
-    Double mNumEntered;
-    String mStrDisplay;
-    Operator mOpPrev;
-    Map<Integer, Operator> mOpMap = new HashMap<Integer, Operator>();
+    Double numAccum;
+    Double numEntered;
+    String strEntered;
+    Operator opPrev;
+    Map<Integer, Operator> opMap = new HashMap<Integer, Operator>();
     //-------------------------------------------------------------------------
-    public Double getNumAccum() {
-        return mNumAccum;
-    }
-    public Double getNumEntered() {
-        return mNumEntered;
+    protected void doClearAll() {
+        numAccum = 0.;
+        numEntered = 0.;
+        strEntered = "";
+        opPrev = null;
+        updateDisplay("0");
     }
     public void doCalc() {
-        if (mOpPrev == null) {
-            updateNumAccum(mNumEntered);
+        if (!strEntered.isEmpty()) {
+            Log.i("Calculator", String.format("strEntered:%s", strEntered));
+            numEntered = Double.parseDouble(strEntered);
+            strEntered = "";
+        }
+        if (opPrev == null) {
+            updateNumAccum(numEntered);
         } else {
-            mOpPrev.calc(this);
+            updateNumAccum(opPrev.calc(numAccum, numEntered));
         }
     }
-    protected void updateDisplay() {
+    protected void updateDisplay(String str) {
         TextView textView = findViewById(R.id.textview_display);
-        textView.setText(mStrDisplay);
+        textView.setText(str);
     }
 
     protected void updateNumAccum(Double numAccum) {
-        mNumAccum = numAccum;
-        TextView textView = findViewById(R.id.textview_display);
-        textView.setText(String.format("%g", mNumAccum));
-        mStrDisplay = "";
+        this.numAccum = numAccum;
+        updateDisplay(String.format("%g", numAccum));
     }
     //-------------------------------------------------------------------------
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mNumAccum = 0.;
-        mStrDisplay = "0";
-        mOpPrev = null;
-        mOpMap.put(R.id.button_plus, new Operator_plus());
-        mOpMap.put(R.id.button_minus, new Operator_minus());
-        mOpMap.put(R.id.button_multiply, new Operator_multiply());
-        mOpMap.put(R.id.button_divide, new Operator_divide());
-        updateDisplay();
+        opMap.put(R.id.button_plus, new Operator_plus());
+        opMap.put(R.id.button_minus, new Operator_minus());
+        opMap.put(R.id.button_multiply, new Operator_multiply());
+        opMap.put(R.id.button_divide, new Operator_divide());
+        doClearAll();
     }
     public void onClick_digit(View view) {
         Button button = (Button) view;
-        Log.i("Calculator", String.format("%s", button.getText()));
-        if (mStrDisplay == "0") {
-            mStrDisplay = "";
+        String strKeyIn = button.getText().toString();
+        if (!strKeyIn.equals(".")) {
+            strEntered += strKeyIn;
+        } else if (strEntered.isEmpty()) {
+            strEntered = "0.";
+        } else if (!strEntered.contains(".")) {
+            strEntered += strKeyIn;
         }
-        mStrDisplay += button.getText();
-        updateDisplay();
+        updateDisplay(strEntered);
     }
     public void onClick_operator(View view) {
-        if (mStrDisplay != "") {
-            mNumEntered = Double.parseDouble(mStrDisplay);
-            doCalc();
-        }
-        mOpPrev = mOpMap.get(view.getId());
+        if (!strEntered.isEmpty()) doCalc();
+        opPrev = opMap.get(view.getId());
     }
     public void onClick_equal(View view) {
         doCalc();
+    }
+    public void onClick_clear(View view) {
+        doClearAll();
     }
 }
