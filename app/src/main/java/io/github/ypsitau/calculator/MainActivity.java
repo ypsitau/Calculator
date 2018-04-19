@@ -10,7 +10,13 @@ import android.widget.TextView;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Main activity of Calculator application.
+ */
 public class MainActivity extends AppCompatActivity {
+    /**
+     * This class provides calculation handler that is provoked by calculator buttons.
+     */
     protected abstract static class Operator {
         abstract public double calc(double numLeft, double numRight);
     }
